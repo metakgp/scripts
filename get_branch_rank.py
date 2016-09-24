@@ -1,3 +1,14 @@
+'''
+    Script to calculate branch-rank of a KGPian
+
+    Instructions for pre-requisites installation at https://github.com/Demfier/Get-branch-rank
+
+    HOW TO USE:
+    1. Run the script in your terminal as:
+    >> python get_branch_rank.py
+    2. Enter your roll number and then wait for some time, you will get your rank.
+'''
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -11,6 +22,10 @@ BASE_URL = 'https://erp.iitkgp.ernet.in/StudentPerformance/view_performance.jsp?
 
 
 def get_cg(url):
+    '''returns CGPA of a student given his/her profile link or returns appropriate
+        error otherwise
+    '''
+
     cgpa = ''
     try:
         r = requests.Session()
@@ -27,7 +42,7 @@ def get_cg(url):
         print('error: invalid HTTP response for', url[len(BASE_URL):])
         return 0
     except requests.exceptions.ChunkedEncodingError as e:
-        print('error: ChunkedEncodingError', url)
+        print('error: ChunkedEncodingError', url[len(BASE_URL):])
         return 0
     soup = BeautifulSoup(response.text.replace('&nbsp', ''), 'lxml')
     tds = soup.find_all('td')
@@ -38,6 +53,10 @@ def get_cg(url):
 
 
 def get_rank(cg_list, mycg):
+    '''
+    Given list of CGPA obtained by the script and mycg from student roll number,
+    returns rank of the student
+    '''
     sorted_list = []
     rank = 1
     for stud in cg_list:
@@ -49,6 +68,7 @@ def get_rank(cg_list, mycg):
 
 
 def check_roll_and_return_cg(rollno):
+    '''Validates the given roll number and return CGPA if found valid'''
     mycg = ''
     url = BASE_URL + rollno
     # print url
