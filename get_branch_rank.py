@@ -14,6 +14,7 @@ def get_cg(url):
     cgpa = ''
     try:
         r = requests.Session()
+        r.mount("https://", requests.adapters.HTTPAdapter(max_retries=2))
         response = r.get(url)
         response.raise_for_status()
     except requests.Timeout:
@@ -53,6 +54,7 @@ def check_roll_and_return_cg(rollno):
     # print url
     try:
         r = requests.Session()
+        r.mount("https://", requests.adapters.HTTPAdapter(max_retries=2))
         response = r.get(url)
         response.raise_for_status()
     except requests.Timeout:
@@ -104,11 +106,10 @@ if __name__ == '__main__':
         url = BASE_URL + dynamic_roll
         if dynamic_roll == rollno:
             pass
-        # NOTE: check if it prints the user's url. It should not actually
         cgpa = get_cg(url)
         if not bool(cgpa):
             invalid_roll_count += 1
-            print 'invalid_roll_count', invalid_roll_count
+            # print 'invalid_roll_count', invalid_roll_count
             index += 1
             continue
         # print url
@@ -119,4 +120,4 @@ if __name__ == '__main__':
     # print cg_list
     print 'your cg', mycg
     final_rank = get_rank(cg_list, mycg)
-    print 'your branch rank is', final_rank, 'out of ', (index - invalid_roll_count - 1), 'students in your branch'
+    print 'your branch rank is', final_rank, 'out of', (index - invalid_roll_count - 1), 'students in your branch'
