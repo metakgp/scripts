@@ -13,8 +13,12 @@ import requests
 from bs4 import BeautifulSoup
 
 # For disabling the InsecurePlatForm warnings
-import requests.packages.urllib3
-requests.packages.urllib3.disable_warnings()
+#import requests.packages.urllib3
+#import urllib3
+#urllib3.disable_warnings()
+
+DEBUG = True
+VERBOSE = False
 
 import sys
 
@@ -69,6 +73,8 @@ def get_rank(cg_list, mycg):
 
 def check_roll_and_return_cg(rollno):
     '''Validates the given roll number and return CGPA if found valid'''
+    if (DEBUG):
+        print "We are going to get your CGPA now"
     mycg = ''
     url = BASE_URL + rollno
     # print url
@@ -76,6 +82,8 @@ def check_roll_and_return_cg(rollno):
         r = requests.Session()
         r.mount("https://", requests.adapters.HTTPAdapter(max_retries=2))
         response = r.get(url)
+        if DEBUG:
+            print "We were able to fetch your CGPA"
         response.raise_for_status()
     except requests.Timeout:
         print('error: timed out', url)
@@ -95,22 +103,26 @@ def check_roll_and_return_cg(rollno):
     for idx, td in enumerate(tds):
         if td.text.strip() == 'CGPA':
             mycg = tds[idx + 1].text
+            if DEBUG:
+                print "Your CGPA was found to be %s" % mycg
             return mycg
 
 if __name__ == '__main__':
-    rollno = raw_input('Enter your roll number please : ')
+    rollno = raw_input('Enter your roll number: ')
     rollno = rollno.replace(' ', '').upper()
-    print 'Okay wait for some time...let me check'
+    print 'Okay, sit tight. We will figure out your rank now!'
     mycg = check_roll_and_return_cg(rollno)
     if not mycg or mycg == '':
-        print """Hmm...it seems like there is some kind of an issue.\n
-                Please try again."""
+        print 'Oh! There seems to be an issue. Try again later, please'
         sys.exit(0)
     cg_list = []
     # varialble to keep track of invalid roll numbers
     invalid_roll_count = 0
     # the final two digits of a roll number
     index = 1
+
+    if DEBUG:
+        print "We will now find the CGPA of all the students in your course: "
 
     # if no roll number found for 5 times continuously I'll assume the branch's student list has ended
     while invalid_roll_count < 6:
@@ -132,12 +144,19 @@ if __name__ == '__main__':
             # print 'invalid_roll_count', invalid_roll_count
             index += 1
             continue
-        # print url
+
+        if DEBUG:
+            print "CGPA of %s is %s" %(dynamic_roll, cgpa)
+
+        if VERBOSE:
+            print url
         invalid_roll_count = 0
         index += 1
         cg_json[dynamic_roll] = cgpa
         cg_list.append(cg_json)
-    # print cg_list
-    print 'your cg', mycg
+    if VERBOSE:
+        print cg_list
+    print 'Your CGPA: ', mycg
     final_rank = get_rank(cg_list, mycg)
-    print 'your branch rank is', final_rank, 'out of', (index - invalid_roll_count - 1), 'students in your branch'
+    print 'Your branch rank is %d out of %d students in your course' % \
+    (final_rank, len(cg_list))
